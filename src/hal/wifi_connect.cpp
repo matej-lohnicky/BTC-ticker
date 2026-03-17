@@ -7,6 +7,7 @@
 #include <modules/wifi_connect.h>
 #include <time.h>
 
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -68,8 +69,19 @@ String choose_wifi()
     show_status_screen("Loading networks");
 
     const std::vector<String> wifis = get_available_wifis();
+    if (wifis.empty())
+    {
+        show_status_screen("No WiFi networks found");
+        delay(MISSING_CREDENTIALS_MESSAGE_DELAY_MS);
+        return "";
+    }
+
     unsigned selected = row_choice(wifis);
-    return wifis[selected].c_str();
+    if (selected >= wifis.size())
+    {
+        selected = 0;
+    }
+    return wifis[selected];
 }
 
 void user_input_wifi()
@@ -77,6 +89,11 @@ void user_input_wifi()
     while (true)
     {
         String ssid = choose_wifi();
+        if (ssid.isEmpty())
+        {
+            continue;
+        }
+
         String password = keyboard_input();
         delay(KEYBOARD_CONFIRM_DELAY_MS);
 
@@ -130,7 +147,8 @@ void fast_connect_wifi()
         tft.fillScreen(TFT_BLACK);
         tft.setCursor(STATUS_TEXT_X, STATUS_TEXT_Y);
         tft.print("Failed to connect to WiFi, please try again");
-        while (true);  // Halt app when no network is available.
+        delay(MISSING_CREDENTIALS_MESSAGE_DELAY_MS);
+        user_input_wifi();
     }
 }
 

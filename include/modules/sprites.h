@@ -1,5 +1,7 @@
 #pragma once
-#include <TFT_eSPI.h>
+
+class TFT_eSPI;
+class TFT_eSprite;
 
 extern TFT_eSPI tft;
 extern TFT_eSprite btc_logo;

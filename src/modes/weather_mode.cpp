@@ -9,19 +9,21 @@
 #include <images/snowflake72.h>
 #include <images/thunderstorm72.h>
 #include <modules/app_state.h>
+#include <modules/generated/weather_location.h>
+#include <modules/modes/weather_mode.h>
 #include <modules/sprites.h>
 #include <modules/variables.h>
-#include <modules/weather_location.h>
-#include <modules/weather_mode.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <vector>
 
 namespace
 {
 
 constexpr int WEATHER_HTTP_OK = 200;
+constexpr int WEATHER_HTTP_TIMEOUT_MS = 8000;
 constexpr int WEATHER_JSON_CAPACITY = 4096;
 constexpr int TIME_SUBSTR_HOUR_START = 11;
 constexpr int TIME_SUBSTR_HOUR_END = 13;
@@ -99,6 +101,8 @@ void update_weather()
 {
     String weatherUrl = build_weather_api_url();
     HTTPClient http;
+    http.setConnectTimeout(WEATHER_HTTP_TIMEOUT_MS);
+    http.setTimeout(WEATHER_HTTP_TIMEOUT_MS);
     http.begin(weatherUrl);
     int httpCode = http.GET();
 
@@ -121,7 +125,7 @@ void update_weather()
         JsonObject hourly = doc["hourly"];
         JsonArray precipitationArray = hourly["precipitation_probability"];
 
-        weatherCode = static_cast<int>(current["weather_code"].as<double>());
+        weatherCode = current["weather_code"].as<int>();
         currentTemperature = static_cast<float>(current["temperature_2m"].as<double>());
 
         String sunrise = daily["sunrise"][0].as<String>();
@@ -135,7 +139,8 @@ void update_weather()
         sunsetMinutes = sunset.substring(TIME_SUBSTR_MINUTE_START, TIME_SUBSTR_MINUTE_END).toInt();
 
         precipitationProbability.clear();
-        for (size_t i = 0; i < precipitationArray.size(); i++)
+        const size_t maxSamples = std::min(precipitationArray.size(), static_cast<size_t>(24));
+        for (size_t i = 0; i < maxSamples; i++)
         {
             precipitationProbability.push_back(precipitationArray[i].as<int>());
         }

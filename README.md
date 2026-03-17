@@ -20,8 +20,13 @@ BTCticker is an ESP32 firmware project for the LILYGO T-Display S3. The device p
 
 ## Repository Layout
 
-- [src](src): application source files
-- [include/modules](include/modules): shared headers, constants, and declarations
+- [src/core](src/core): app loop/controller and shared runtime globals
+- [src/modes](src/modes): mode implementations (bitcoin, clock, weather)
+- [src/hal](src/hal): hardware-facing modules (display, wifi, brightness, ui utils)
+- [include/modules/modes](include/modules/modes): canonical mode headers
+- [include/modules/hal](include/modules/hal): canonical HAL headers
+- [include/modules/generated](include/modules/generated): auto-generated headers
+- [include/modules](include/modules): shared non-domain headers
 - [include/images](include/images): embedded graphics assets
 - [scripts/load_env.py](scripts/load_env.py): pre-build .env loader
 - [platformio.ini](platformio.ini): PlatformIO build configuration
@@ -60,10 +65,15 @@ Build integration:
 
 - [platformio.ini](platformio.ini) runs [scripts/load_env.py](scripts/load_env.py) as a pre-build step
 - [scripts/load_env.py](scripts/load_env.py) reads .env values
-- [scripts/load_env.py](scripts/load_env.py) resolves WEATHER_CITY to coordinates and generates [include/modules/weather_location.h](include/modules/weather_location.h)
+- [scripts/load_env.py](scripts/load_env.py) resolves WEATHER_CITY to coordinates and generates [include/modules/generated/weather_location.h](include/modules/generated/weather_location.h)
 - Runtime values are injected as compile-time defines
-- [src/wifi_connect.cpp](src/wifi_connect.cpp) uses those defines in Home mode
-- [src/weather_mode.cpp](src/weather_mode.cpp) uses generated coordinates for weather fetch
+- [src/hal/wifi_connect.cpp](src/hal/wifi_connect.cpp) uses those defines in Home mode
+- [src/modes/weather_mode.cpp](src/modes/weather_mode.cpp) uses generated coordinates for weather fetch
+
+Canonical include policy:
+
+- Domain headers live in subfolders only (`modules/modes`, `modules/hal`, `modules/generated`)
+- Root-level duplicate wrappers should not be reintroduced
 
 If credentials are not present, firmware falls back to manual Wi-Fi selection/input flow.
 

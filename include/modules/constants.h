@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstdint>
-
 constexpr int BUTTON_DOWN = 0;
 constexpr int BUTTON_UP = 14;
 
-using Color = uint16_t;
+using Color = unsigned short;
 
 // graphics
 constexpr int row_height = 20;
@@ -15,7 +13,6 @@ constexpr int row_name_y_padding = 10;
 // intervals
 constexpr unsigned long TIME_UPDATE_INTERVAL = 5000UL;
 constexpr unsigned long PRICE_UPDATE_INTERVAL = 60000UL;
-constexpr unsigned long PRICE_UPDATE_INTERVAl = PRICE_UPDATE_INTERVAL;
 constexpr unsigned long MODE0_UPDATE_INTERVAL = 60000UL;   // standard price
 constexpr unsigned long MODE1_UPDATE_INTERVAL = 5000UL;    // clock
 constexpr unsigned long MODE2_UPDATE_INTERVAL = 300000UL;  // weather

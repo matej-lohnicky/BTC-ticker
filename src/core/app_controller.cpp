@@ -1,13 +1,14 @@
 #include <TFT_eSPI.h>
 #include <modules/app_controller.h>
 #include <modules/app_state.h>
-#include <modules/bitcoin_mode.h>
-#include <modules/clock_mode.h>
 #include <modules/constants.h>
 #include <modules/display_setup.h>
+#include <modules/hal/brightness_control.h>
+#include <modules/modes/bitcoin_mode.h>
+#include <modules/modes/clock_mode.h>
+#include <modules/modes/weather_mode.h>
 #include <modules/sprites.h>
 #include <modules/variables.h>
-#include <modules/weather_mode.h>
 #include <modules/wifi_connect.h>
 #include <stdlib.h>
 #include <time.h>
@@ -24,6 +25,10 @@ constexpr unsigned long BUTTON_DEBOUNCE_MS = 250UL;
 constexpr unsigned long SERIAL_BAUD_RATE = 115200UL;
 constexpr const char* NTP_SERVER = "pool.ntp.org";
 
+bool previousButtonUpState = false;
+bool previousButtonDownState = false;
+unsigned long lastButtonSwitchMillis = 0;
+
 void update_mode_variables()
 {
     changed_mode = false;
@@ -32,21 +37,34 @@ void update_mode_variables()
 
 void handle_mode_switch_buttons()
 {
-    if (digitalRead(BUTTON_UP) == LOW)
+    const bool buttonUpPressed = digitalRead(BUTTON_UP) == LOW;
+    const bool buttonDownPressed = digitalRead(BUTTON_DOWN) == LOW;
+
+    if (currentMillis - lastButtonSwitchMillis < BUTTON_DEBOUNCE_MS)
+    {
+        previousButtonUpState = buttonUpPressed;
+        previousButtonDownState = buttonDownPressed;
+        return;
+    }
+
+    if (buttonUpPressed && !previousButtonUpState)
     {
         mode = static_cast<DisplayMode>((static_cast<int>(mode) + 1) % MODE_COUNT);
         changed_mode = true;
         tft.fillScreen(TFT_BLACK);
-        delay(BUTTON_DEBOUNCE_MS);
+        lastButtonSwitchMillis = currentMillis;
     }
 
-    if (digitalRead(BUTTON_DOWN) == LOW)
+    if (buttonDownPressed && !previousButtonDownState)
     {
         mode = static_cast<DisplayMode>((static_cast<int>(mode) - 1 + MODE_COUNT) % MODE_COUNT);
         changed_mode = true;
         tft.fillScreen(TFT_BLACK);
-        delay(BUTTON_DEBOUNCE_MS);
+        lastButtonSwitchMillis = currentMillis;
     }
+
+    previousButtonUpState = buttonUpPressed;
+    previousButtonDownState = buttonDownPressed;
 }
 
 void render_active_mode()
@@ -65,6 +83,10 @@ void render_active_mode()
         case DisplayMode::Clock:
             if (currentMillis - lastModeUpdate >= MODE1_UPDATE_INTERVAL || changed_mode)
             {
+                if (changed_mode)
+                {
+                    clock_update_time();
+                }
                 clock_render();
                 update_mode_variables();
             }
@@ -112,9 +134,11 @@ void app_loop()
     if (currentMillis - lastTimeUpdate >= TIME_UPDATE_INTERVAL)
     {
         clock_update_time();
-        adjust_brightness();
         bitcoin_sync_chart();
     }
+
+    // Apply smooth non-blocking brightness transitions continuously.
+    adjust_brightness();
 
     render_active_mode();
 }

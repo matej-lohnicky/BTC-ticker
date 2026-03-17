@@ -38,6 +38,8 @@ constexpr int BACKSPACE_KEY_INDEX = 38;
 constexpr int SHIFT_KEY_INDEX = 39;
 
 constexpr unsigned long KEYBOARD_NAV_DELAY_MS = 100UL;
+constexpr unsigned long ROW_CHOICE_TIMEOUT_MS = 120000UL;
+constexpr unsigned long KEYBOARD_INPUT_TIMEOUT_MS = 180000UL;
 
 inline int grid_cell_x(int col) { return col * GRID_CELL_SIZE; }
 inline int grid_cell_y(int row) { return GRID_TOP_Y + row * GRID_CELL_SIZE; }
@@ -72,6 +74,7 @@ unsigned row_choice(const std::vector<String>& rows)
     display_rows(rows);
     int y = row_name_y_padding;
     int row_index = 0;
+    const unsigned long startMillis = millis();
 
     auto draw_row_frame = [&y](Color c)
     { tft.drawRect(0, y - MENU_FRAME_TOP_OFFSET, SCREEN_LAST_X, MENU_FRAME_HEIGHT, c); };
@@ -79,6 +82,11 @@ unsigned row_choice(const std::vector<String>& rows)
 
     while (true)
     {
+        if (millis() - startMillis >= ROW_CHOICE_TIMEOUT_MS)
+        {
+            return row_index;
+        }
+
         if (digitalRead(BUTTON_UP) == LOW)
         {
             draw_row_frame(TFT_BLACK);
@@ -154,10 +162,16 @@ String keyboard_input()
     bool upper_letter = false;
     String password = "";
     unsigned long pressStartTime = 0;
+    const unsigned long startMillis = millis();
     bool buttonPressed = false;
 
     while (true)
     {
+        if (millis() - startMillis >= KEYBOARD_INPUT_TIMEOUT_MS)
+        {
+            return password;
+        }
+
         if (digitalRead(BUTTON_UP) == LOW)
         {
             draw_keyboard_selector(selected_col, selected_row, TFT_WHITE);

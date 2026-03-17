@@ -1,6 +1,8 @@
 #include <TFT_eSPI.h>
 #include <modules/app_state.h>
 
+#include <vector>
+
 DisplayMode mode = DisplayMode::Bitcoin;
 bool changed_mode = true;
 

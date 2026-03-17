@@ -1,21 +1,13 @@
 #include <TFT_eSPI.h>
 #include <images/FreeSansBold55pt7b.h>
 #include <modules/app_state.h>
-#include <modules/clock_mode.h>
+#include <modules/modes/clock_mode.h>
 #include <modules/sprites.h>
 #include <modules/variables.h>
 #include <time.h>
 
 namespace
 {
-
-constexpr byte DAY_BRIGHTNESS = 250;
-constexpr byte EVENING_BRIGHTNESS = 50;
-constexpr byte NIGHT_BRIGHTNESS = 5;
-constexpr int TIME_SYNC_MAX_RETRIES = 5;
-constexpr unsigned long TIME_SYNC_RETRY_DELAY_MS = 1000UL;
-constexpr int LCD_BACKLIGHT_PIN = 38;
-constexpr unsigned long BRIGHTNESS_STEP_DELAY_MS = 50UL;
 
 constexpr int CLOCK_RECT_LEFT_X = 18;
 constexpr int CLOCK_RECT_RIGHT_X = 177;
@@ -44,17 +36,7 @@ void clock_update_time()
     lastTimeUpdate = currentMillis;
 
     struct tm timeinfo;
-    int retries = 0;
-
-    // Keep previous displayed time if NTP is temporarily unavailable.
-    while (!getLocalTime(&timeinfo) && retries < TIME_SYNC_MAX_RETRIES)
-    {
-        Serial.println("Waiting for local time sync...");
-        delay(TIME_SYNC_RETRY_DELAY_MS);
-        ++retries;
-    }
-
-    if (retries == TIME_SYNC_MAX_RETRIES)
+    if (!getLocalTime(&timeinfo))
     {
         Serial.println("Time sync unavailable, keeping previous values");
         return;
@@ -102,42 +84,4 @@ void clock_render()
     clock_display.print(minute2);
 
     clock_display.pushSprite(0, 0);
-}
-
-void adjust_brightness()
-{
-    byte newBrightness = currentBrightness;
-
-    switch (globalHours)
-    {
-        case 6 ... 17:
-            newBrightness = DAY_BRIGHTNESS;
-            break;
-        case 18 ... 21:
-            newBrightness = (globalHours < sunsetHours) ? DAY_BRIGHTNESS : EVENING_BRIGHTNESS;
-            break;
-        case 22 ... 23:
-        case 0 ... 5:
-            newBrightness = NIGHT_BRIGHTNESS;
-            break;
-    }
-
-    if (newBrightness > currentBrightness)
-    {
-        while (newBrightness != currentBrightness)
-        {
-            currentBrightness++;
-            analogWrite(LCD_BACKLIGHT_PIN, currentBrightness);
-            delay(BRIGHTNESS_STEP_DELAY_MS);
-        }
-    }
-    else if (newBrightness < currentBrightness)
-    {
-        while (newBrightness != currentBrightness)
-        {
-            --currentBrightness;
-            analogWrite(LCD_BACKLIGHT_PIN, currentBrightness);
-            delay(BRIGHTNESS_STEP_DELAY_MS);
-        }
-    }
 }

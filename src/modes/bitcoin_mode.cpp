@@ -10,12 +10,13 @@
 #include <images/bitcoin_white_73.h>
 #include <images/moon24.h>
 #include <modules/app_state.h>
-#include <modules/bitcoin_mode.h>
 #include <modules/constants.h>
+#include <modules/modes/bitcoin_mode.h>
 #include <modules/sprites.h>
 #include <modules/variables.h>
 
 #include <algorithm>
+#include <vector>
 
 namespace
 {
@@ -64,7 +65,6 @@ constexpr int ROTATION_BACK_CIRCLE_Y = 37;
 constexpr int ROTATION_BACK_CIRCLE_RADIUS = 34;
 constexpr int ROTATION_SPRITE_X = 20;
 constexpr int ROTATION_SPRITE_Y = 10;
-constexpr unsigned long ROTATION_EDGE_PAUSE_MS = 50UL;
 
 constexpr int SESSIONS_MARKET_ICON_X = 4;
 constexpr int SESSIONS_US_ICON_Y = 0;
@@ -379,7 +379,6 @@ void bitcoin_logo_rotation()
             angle++;
             if (angle == angleMax)
             {
-                delay(ROTATION_EDGE_PAUSE_MS);
                 reversal = false;
             }
         }
@@ -388,7 +387,6 @@ void bitcoin_logo_rotation()
             angle--;
             if (angle == angleMin)
             {
-                delay(ROTATION_EDGE_PAUSE_MS);
                 reversal = true;
             }
         }
