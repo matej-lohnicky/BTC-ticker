@@ -39,7 +39,7 @@ unsigned row_choice(const std::vector<String>& rows)
     while (true)
     {
         if (digitalRead(BUTTON_UP) == LOW)
-        {  // browsing through the networks
+        {
             draw_row_frame(TFT_BLACK);
             row_index = (row_index + 1) % rows.size();
 
@@ -53,10 +53,10 @@ unsigned row_choice(const std::vector<String>& rows)
             }
 
             draw_row_frame(TFT_BLUE);
-            delay(250);  // KEEP SOME DELAY, for the buttons to work properly
+            delay(250);
         }
         if (digitalRead(BUTTON_DOWN) == LOW)
-        {  // choosing the network
+        {
             delay(250);
             return row_index;
         }
@@ -65,21 +65,19 @@ unsigned row_choice(const std::vector<String>& rows)
 
 void display_keyboard()
 {
-    // frame
     tft.fillScreen(TFT_BLACK);
     for (int y = 0; y < 11; y++)
-    {  // vertical
+    {
         tft.drawLine(32 * y, 42, 32 * y, 170, TFT_WHITE);
     }
     tft.drawLine(319, 42, 319, 170, TFT_WHITE);
 
     for (int x = 0; x < 4; x++)
-    {  // horizontal
+    {
         tft.drawLine(0, 42 + 32 * x, 320, 42 + 32 * x, TFT_WHITE);
     }
     tft.drawLine(0, 169, 320, 169, TFT_WHITE);
 
-    // keys
     tft.setTextSize(2);
     int MaxIndex = KEYS.size();
     int KeyIndex = 0;
@@ -95,7 +93,6 @@ void display_keyboard()
         }
     }
 
-    // pictures for special keys
     tft.fillRect(289, 140, 30, 29, TFT_BLACK);
     tft.fillRect(257, 140, 30, 29, TFT_BLACK);
     tft.fillRect(273, 154, 10, 1, TFT_WHITE);
@@ -119,7 +116,7 @@ String keyboard_input()
     while (true)
     {
         if (digitalRead(BUTTON_UP) == LOW)
-        {  // browsing through the keys
+        {
             tft.drawRect(x, y + 42, 32 + 1, 32 + 1, TFT_WHITE);
             x = x + 32;
             if (x >= 320)
@@ -132,14 +129,13 @@ String keyboard_input()
                 }
             }
             tft.drawRect(x, y + 42, 32 + 1, 32 + 1, TFT_BLUE);
-            delay(100);  // KEEP SOME DELAY, for the buttons to work properly
+            delay(100);
         }
 
         if (digitalRead(BUTTON_DOWN) == LOW)
-        {  // press for entering the key, hold for entering the whole
-           // password
+        {
             if (!buttonPressed)
-            {  // start timer when pressed
+            {
                 pressStartTime = millis();
                 buttonPressed = true;
             }
@@ -171,11 +167,11 @@ String keyboard_input()
                         }
                     }
                     else if (KeyIndex == 39)
-                    {  // capslock
+                    {
                         UpperLetter = true;
                     }
                     else if (KeyIndex == 38)
-                    {  // delete
+                    {
                         tft.fillRect(0, 0, 320, 40, TFT_BLACK);
                         if (!password.isEmpty())
                         {
@@ -186,11 +182,11 @@ String keyboard_input()
                     }
                 }
                 else
-                {  // buton held
+                {
                     return password;
                 }
             }
-            delay(100);  // KEEP SOME DELAY, for the buttons to work properly
+            delay(100);
         }
     }
 }

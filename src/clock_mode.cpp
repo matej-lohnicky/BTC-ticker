@@ -46,6 +46,7 @@ void clock_update_time()
     struct tm timeinfo;
     int retries = 0;
 
+    // Keep previous displayed time if NTP is temporarily unavailable.
     while (!getLocalTime(&timeinfo) && retries < TIME_SYNC_MAX_RETRIES)
     {
         Serial.println("Waiting for local time sync...");

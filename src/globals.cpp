@@ -1,14 +1,12 @@
 #include <TFT_eSPI.h>
 #include <modules/constants.h>
 
-// variables
 unsigned long currentMillis = 0;
 unsigned long lastModeUpdate = 0;
 unsigned long lastPriceUpdate = 0;
 unsigned long lastRotationUpdate = 0;
 unsigned long lastTimeUpdate = 0;
 
-// sprites
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite btc_logo = TFT_eSprite(&tft);
 TFT_eSprite back_logo = TFT_eSprite(&tft);

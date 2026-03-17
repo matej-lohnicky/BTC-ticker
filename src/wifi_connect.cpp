@@ -46,7 +46,7 @@ std::vector<String> get_available_wifis()
     std::vector<String> result;
 
     for (int i = 0; i < WIFI_SCAN_PASSES; i++)
-    {  // searching for networks, 3 times to ensure seeing all of them
+    {
         tft.print(".");
         int numNetworks = WiFi.scanNetworks();
 
@@ -78,7 +78,7 @@ void user_input_wifi()
     {
         String ssid = choose_wifi();
         String password = keyboard_input();
-        delay(KEYBOARD_CONFIRM_DELAY_MS);  // KEEP SOME DELAY, for the buttons to work properly
+        delay(KEYBOARD_CONFIRM_DELAY_MS);
 
         WiFi.begin(ssid, password);
         show_status_screen("Connecting to WiFi");
@@ -122,17 +122,15 @@ void fast_connect_wifi()
     }
 
     if (WiFi.status() == WL_CONNECTED)
-    {  // WiFi connected successfully
+    {
         tft.fillScreen(TFT_BLACK);
     }
     else
-    {  // Wi-Fi connection failed
+    {
         tft.fillScreen(TFT_BLACK);
         tft.setCursor(STATUS_TEXT_X, STATUS_TEXT_Y);
         tft.print("Failed to connect to WiFi, please try again");
-        while (true)
-        {
-        }  // prevets further code execution without the internet
+        while (true);  // Halt app when no network is available.
     }
 }
 
@@ -142,10 +140,10 @@ void connect_wifi()
 
     switch (selected)
     {
-        case 0:  // home, credentials from firmware
+        case 0:
             fast_connect_wifi();
             break;
-        case 1:  // outside from home, credentials from user
+        case 1:
             user_input_wifi();
             break;
     }

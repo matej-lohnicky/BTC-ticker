@@ -48,6 +48,7 @@ void handle_mode_switch_buttons()
 
 void render_active_mode()
 {
+    // Each mode has its own cadence to keep UI responsive while avoiding unnecessary redraws.
     switch (mode)
     {
         case DisplayMode::Bitcoin:
@@ -98,6 +99,7 @@ void app_loop()
     currentMillis = millis();
     handle_mode_switch_buttons();
 
+    // Data updates run independently from mode rendering, so mode switches stay snappy.
     if (currentMillis - lastPriceUpdate >= PRICE_UPDATE_INTERVAL)
     {
         bitcoin_update_price();

@@ -119,6 +119,7 @@ void update_weather()
         String sunrise = daily["sunrise"][0].as<String>();
         String sunset = daily["sunset"][0].as<String>();
 
+        // Open-Meteo returns ISO datetime strings; we only need HH:MM.
         sunriseHours = sunrise.substring(TIME_SUBSTR_HOUR_START, TIME_SUBSTR_HOUR_END).toInt();
         sunriseMinutes =
             sunrise.substring(TIME_SUBSTR_MINUTE_START, TIME_SUBSTR_MINUTE_END).toInt();
@@ -229,6 +230,7 @@ void display_sun_time_range()
     int totalCurrentMinutes = (globalHours * 60) + globalMinutes;
     int dayMinutes = totalSunsetMinutes - totalSunriseMinutes;
 
+    // Guard against malformed API data where sunrise/sunset ordering is invalid.
     if (dayMinutes <= 0)
     {
         temperatureRange.fillRect(DAYLIGHT_FILL_X, DAYLIGHT_FILL_Y, DAYLIGHT_FILL_WIDTH,

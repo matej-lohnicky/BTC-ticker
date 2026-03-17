@@ -107,6 +107,7 @@ void mark_price_update_failed()
         return;
     }
 
+    // Throttle reconnect attempts to avoid blocking loops on unstable links.
     lastWiFiRecoveryAttempt = currentMillis;
     Serial.println("Price fetch repeatedly failing, attempting WiFi recovery");
 
@@ -334,6 +335,7 @@ void bitcoin_sync_chart()
 
     chartTimeChange = chartTime;
 
+    // Append to chart only when we actually received a fresh sample.
     if (priceFreshSample)
     {
         update_price_chart();
