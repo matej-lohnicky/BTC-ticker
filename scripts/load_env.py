@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Any, cast
 
@@ -37,16 +36,24 @@ def _to_cpp_define_string(value: str) -> str:
 project_dir = Path(env.subst("$PROJECT_DIR"))
 dotenv_values = _load_dotenv(project_dir / ".env")
 
-for k, v in dotenv_values.items():
-    os.environ.setdefault(k, v)
+ssid = dotenv_values.get("WIFI_SSID", "")
+password = dotenv_values.get("WIFI_PASSWORD", "")
+timezone = dotenv_values.get("APP_TIMEZONE", "")
 
-ssid = os.environ.get("WIFI_SSID", "")
-password = os.environ.get("WIFI_PASSWORD", "")
+if not timezone:
+    raise RuntimeError("APP_TIMEZONE must be set in .env")
+
+cpp_defines = []
 
 if ssid and password:
-    env.Append(
-        CPPDEFINES=[
+    cpp_defines.extend(
+        [
             ("WIFI_SSID", _to_cpp_define_string(ssid)),
             ("WIFI_PASSWORD", _to_cpp_define_string(password)),
         ]
     )
+
+cpp_defines.append(("APP_TIMEZONE", _to_cpp_define_string(timezone)))
+
+if cpp_defines:
+    env.Append(CPPDEFINES=cpp_defines)

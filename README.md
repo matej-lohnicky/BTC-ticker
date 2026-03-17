@@ -51,6 +51,7 @@ Wi-Fi credentials are provided through a local .env file in the repository root.
 ```env
 WIFI_SSID=your_wifi_name
 WIFI_PASSWORD=your_wifi_password
+APP_TIMEZONE=CET-1CEST,M3.5.0/2,M10.5.0/3
 ```
 
 Build integration:
@@ -80,7 +81,7 @@ Primary build target is defined in [platformio.ini](platformio.ini):
 
 - Build fails due to credentials:
   - Confirm .env exists in the project root
-  - Confirm WIFI_SSID and WIFI_PASSWORD are non-empty
+  - Confirm WIFI_SSID, WIFI_PASSWORD, and APP_TIMEZONE are non-empty
 - Device fails to connect in Home mode:
   - Verify SSID/password values
   - Use Standard mode to test manual connection

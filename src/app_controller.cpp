@@ -9,7 +9,12 @@
 #include <modules/variables.h>
 #include <modules/weather_mode.h>
 #include <modules/wifi_connect.h>
+#include <stdlib.h>
 #include <time.h>
+
+#ifndef APP_TIMEZONE
+#define APP_TIMEZONE ""
+#endif
 
 namespace
 {
@@ -18,8 +23,6 @@ constexpr int MODE_COUNT = 3;
 constexpr unsigned long BUTTON_DEBOUNCE_MS = 250UL;
 constexpr unsigned long SERIAL_BAUD_RATE = 115200UL;
 constexpr const char* NTP_SERVER = "pool.ntp.org";
-constexpr long GMT_OFFSET_SEC = 3600;
-constexpr int DAYLIGHT_OFFSET_SEC = 3600;
 
 void update_mode_variables()
 {
@@ -87,7 +90,8 @@ void app_setup()
     configure_sprite_swap_bytes();
 
     connect_wifi();
-    configTime(GMT_OFFSET_SEC, DAYLIGHT_OFFSET_SEC, NTP_SERVER);
+    // ESP32 helper that applies TZ rules and starts NTP sync in one call.
+    configTzTime(APP_TIMEZONE, NTP_SERVER);
     bitcoin_update_price();
     clock_update_time();
     adjust_brightness();
