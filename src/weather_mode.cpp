@@ -289,10 +289,7 @@ void display_rain_chart()
 
 void weather_render()
 {
-    if (!offline_mode)
-    {
-        update_weather();
-    }
+    update_weather();
 
     display_weather_icon();
     display_temperature();

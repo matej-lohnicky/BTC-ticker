@@ -52,9 +52,7 @@ void render_active_mode()
     {
         case DisplayMode::Bitcoin:
             bitcoin_logo_rotation();
-            if (currentMillis - lastModeUpdate >=
-                    static_cast<unsigned long>(mode0_update_interval) ||
-                changed_mode)
+            if (currentMillis - lastModeUpdate >= MODE0_UPDATE_INTERVAL || changed_mode)
             {
                 bitcoin_render();
                 update_mode_variables();

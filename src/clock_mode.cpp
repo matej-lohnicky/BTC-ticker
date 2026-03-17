@@ -12,8 +12,6 @@ namespace
 constexpr byte DAY_BRIGHTNESS = 250;
 constexpr byte EVENING_BRIGHTNESS = 50;
 constexpr byte NIGHT_BRIGHTNESS = 5;
-constexpr unsigned long OFFLINE_MINUTE_INTERVAL_MS = 60000UL;
-constexpr int MAX_MINUTES = 59;
 constexpr int TIME_SYNC_MAX_RETRIES = 5;
 constexpr unsigned long TIME_SYNC_RETRY_DELAY_MS = 1000UL;
 constexpr int LCD_BACKLIGHT_PIN = 38;
@@ -45,24 +43,6 @@ void clock_update_time()
 {
     lastTimeUpdate = currentMillis;
 
-    if (offline_mode)
-    {
-        if (currentMillis <= offline_minute_update + OFFLINE_MINUTE_INTERVAL_MS)
-        {
-            return;
-        }
-
-        globalMinutes += 1;
-        if (globalMinutes > MAX_MINUTES)
-        {
-            globalMinutes = 0;
-            globalHours += 1;
-        }
-
-        offline_minute_update = currentMillis;
-        return;
-    }
-
     struct tm timeinfo;
     int retries = 0;
 
@@ -83,7 +63,7 @@ void clock_update_time()
     globalHours = timeinfo.tm_hour;
     globalDay = timeinfo.tm_wday;
 
-    chartTime = chartFasterMode ? globalMinutes : globalHours;
+    chartTime = globalHours;
 }
 
 void clock_render()

@@ -16,14 +16,12 @@
 #include <modules/variables.h>
 
 #include <algorithm>
-#include <random>
 
 namespace
 {
 
 constexpr int CHART_STEP = 15;
 constexpr int MAX_CHART_POINTS = 10;
-constexpr int OFFLINE_DEFAULT_PRICE = 68671;
 constexpr int CHART_GRID_HORIZONTAL_LINES = 6;
 constexpr int CHART_GRID_VERTICAL_LINES = 10;
 constexpr int CHART_GRID_Y_SPACING = 15;
@@ -91,9 +89,6 @@ constexpr unsigned long WIFI_RECOVERY_INTERVAL_MS = 30000UL;
 constexpr int MAX_FAILED_FETCHES_BEFORE_RECOVERY = 3;
 constexpr const char API_BTC_PRICE[] = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
 
-std::random_device rd;
-std::mt19937 gen(rd());
-std::uniform_int_distribution<int> distribution(-300, 300);
 int consecutivePriceFetchFailures = 0;
 unsigned long lastWiFiRecoveryAttempt = 0;
 
@@ -284,33 +279,6 @@ void update_price_chart()
 void bitcoin_update_price()
 {
     lastPriceUpdate = currentMillis;
-
-    if (offline_mode)
-    {
-        if (!changed_mode)
-        {
-            return;
-        }
-
-        if (readings.empty())
-        {
-            readings.push_back(price > 0 ? price : OFFLINE_DEFAULT_PRICE);
-        }
-
-        int last_reading = readings.back();
-        int new_reading = last_reading + distribution(gen);
-        readings.push_back(new_reading);
-        price = new_reading;
-
-        if (readings.size() > MAX_CHART_POINTS)
-        {
-            readings.erase(readings.begin());
-        }
-
-        percentChange += (static_cast<double>(new_reading) / last_reading - 1) * 100;
-        mark_price_update_succeeded();
-        return;
-    }
 
     if (WiFi.status() != WL_CONNECTED)
     {

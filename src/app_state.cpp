@@ -23,7 +23,6 @@ std::vector<int> readings;
 int globalMinutes = 0;
 int globalHours = 0;
 int globalDay = 0;
-unsigned long offline_minute_update = 0;
 
 int weatherCode = 0;
 int sunriseHours = 0;

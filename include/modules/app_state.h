@@ -33,7 +33,6 @@ extern std::vector<int> readings;
 extern int globalMinutes;
 extern int globalHours;
 extern int globalDay;
-extern unsigned long offline_minute_update;
 
 extern int weatherCode;
 extern int sunriseHours;

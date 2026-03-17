@@ -1,6 +1,5 @@
 #include <TFT_eSPI.h>
 #include <WiFi.h>
-#include <modules/app_state.h>
 #include <modules/constants.h>
 #include <modules/sprites.h>
 #include <modules/utils.h>
@@ -31,21 +30,7 @@ constexpr unsigned long WIFI_CONNECT_RETRY_DELAY_MS = 1000UL;
 constexpr unsigned long MISSING_CREDENTIALS_MESSAGE_DELAY_MS = 1500UL;
 constexpr int FAILURE_RETRY_DELAY_MS = 4;
 
-constexpr int OFFLINE_SEED_PRICE = 68671;
-constexpr double OFFLINE_SEED_PERCENT_CHANGE = 1.52;
-constexpr int OFFLINE_SEED_HOUR = 9;
-constexpr int OFFLINE_SEED_MINUTE = 32;
-constexpr int OFFLINE_SEED_DAY = 1;
-constexpr int OFFLINE_SEED_WEATHER_CODE = 1;
-constexpr float OFFLINE_SEED_TEMPERATURE = 22.5F;
-constexpr int OFFLINE_SUNRISE_HOUR = 4;
-constexpr int OFFLINE_SUNRISE_MINUTE = 58;
-constexpr int OFFLINE_SUNSET_HOUR = 20;
-constexpr int OFFLINE_SUNSET_MINUTE = 44;
-
-const std::vector<String> BOOT_MODES = {"Home", "Standard", "Showcase", "Offline"};
-const std::vector<int> OFFLINE_SEED_PRECIPITATION = {0,  0,  0, 0,  0,  10, 15, 20, 40, 60, 60, 30,
-                                                     20, 10, 5, 15, 20, 10, 5,  0,  0,  0,  0,  0};
+const std::vector<String> BOOT_MODES = {"Home", "Standard"};
 
 void show_status_screen(const String& message)
 {
@@ -158,42 +143,10 @@ void connect_wifi()
     switch (selected)
     {
         case 0:  // home, credentials from firmware
-            offline_mode = false;
             fast_connect_wifi();
-            chartFasterMode = false;
-            mode0_update_interval = MODE0_UPDATE_INTERVAL_NORMAL;
             break;
         case 1:  // outside from home, credentials from user
-            offline_mode = false;
             user_input_wifi();
-            chartFasterMode = false;
-            mode0_update_interval = MODE0_UPDATE_INTERVAL_NORMAL;
-            break;
-        case 2:  // showcase, faster
-            offline_mode = false;
-            user_input_wifi();
-            chartFasterMode = true;
-            mode0_update_interval = MODE0_UPDATE_INTERVAL_FAST;
-            break;
-        case 3:  // offline mode, random price generator
-            WiFi.disconnect(true);
-            offline_mode = true;
-            chartFasterMode = true;
-            mode0_update_interval = MODE0_UPDATE_INTERVAL_FAST;
-            readings = {OFFLINE_SEED_PRICE};
-            price = OFFLINE_SEED_PRICE;
-            percentChange = OFFLINE_SEED_PERCENT_CHANGE;
-            globalHours = OFFLINE_SEED_HOUR;
-            globalMinutes = OFFLINE_SEED_MINUTE;
-            globalDay = OFFLINE_SEED_DAY;
-            offline_minute_update = millis();
-            sunriseHours = OFFLINE_SUNRISE_HOUR;
-            sunriseMinutes = OFFLINE_SUNRISE_MINUTE;
-            sunsetHours = OFFLINE_SUNSET_HOUR;
-            sunsetMinutes = OFFLINE_SUNSET_MINUTE;
-            precipitationProbability = OFFLINE_SEED_PRECIPITATION;
-            weatherCode = OFFLINE_SEED_WEATHER_CODE;
-            currentTemperature = OFFLINE_SEED_TEMPERATURE;
             break;
     }
     tft.fillScreen(TFT_BLACK);
