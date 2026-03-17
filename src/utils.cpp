@@ -3,11 +3,51 @@
 #include <modules/sprites.h>
 #include <modules/variables.h>
 
+#include <cstddef>
 #include <vector>
 
 const std::vector<String> KEYS = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "a", "b", "c",
                                   "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p",
                                   "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", ".", "+"};
+
+namespace
+{
+
+constexpr int SCREEN_WIDTH = 320;
+constexpr int SCREEN_LAST_X = SCREEN_WIDTH - 1;
+
+constexpr int MENU_FRAME_TOP_OFFSET = 3;
+constexpr int MENU_FRAME_HEIGHT = row_height + 1;
+constexpr unsigned long BUTTON_DEBOUNCE_MS = 250UL;
+
+constexpr int GRID_COLS = 10;
+constexpr int GRID_ROWS = 4;
+constexpr int GRID_CELL_SIZE = 32;
+constexpr int GRID_TOP_Y = 42;
+constexpr int GRID_BOTTOM_Y = GRID_TOP_Y + GRID_CELL_SIZE * GRID_ROWS - 1;
+constexpr int GRID_TEXT_OFFSET_X = 12;
+constexpr int GRID_TEXT_OFFSET_Y = 9;
+
+constexpr int INPUT_TEXT_X = 5;
+constexpr int INPUT_TEXT_Y = 5;
+constexpr int INPUT_CLEAR_HEIGHT = 40;
+
+constexpr int KEYBOARD_START_COL = 0;
+constexpr int KEYBOARD_START_ROW = 1;
+constexpr int BACKSPACE_KEY_INDEX = 38;
+constexpr int SHIFT_KEY_INDEX = 39;
+
+constexpr unsigned long KEYBOARD_NAV_DELAY_MS = 100UL;
+
+inline int grid_cell_x(int col) { return col * GRID_CELL_SIZE; }
+inline int grid_cell_y(int row) { return GRID_TOP_Y + row * GRID_CELL_SIZE; }
+
+inline void draw_keyboard_selector(int col, int row, Color color)
+{
+    tft.drawRect(grid_cell_x(col), grid_cell_y(row), GRID_CELL_SIZE + 1, GRID_CELL_SIZE + 1, color);
+}
+
+}  // namespace
 
 void display_rows(const std::vector<String>& rows)
 {
@@ -33,7 +73,8 @@ unsigned row_choice(const std::vector<String>& rows)
     int y = row_name_y_padding;
     int row_index = 0;
 
-    auto draw_row_frame = [&y](Color c) { tft.drawRect(0, y - 3, 319, 21, c); };
+    auto draw_row_frame = [&y](Color c)
+    { tft.drawRect(0, y - MENU_FRAME_TOP_OFFSET, SCREEN_LAST_X, MENU_FRAME_HEIGHT, c); };
     draw_row_frame(TFT_BLUE);
 
     while (true)
@@ -53,11 +94,11 @@ unsigned row_choice(const std::vector<String>& rows)
             }
 
             draw_row_frame(TFT_BLUE);
-            delay(250);
+            delay(BUTTON_DEBOUNCE_MS);
         }
         if (digitalRead(BUTTON_DOWN) == LOW)
         {
-            delay(250);
+            delay(BUTTON_DEBOUNCE_MS);
             return row_index;
         }
     }
@@ -66,30 +107,32 @@ unsigned row_choice(const std::vector<String>& rows)
 void display_keyboard()
 {
     tft.fillScreen(TFT_BLACK);
-    for (int y = 0; y < 11; y++)
+    for (int col = 0; col <= GRID_COLS; ++col)
     {
-        tft.drawLine(32 * y, 42, 32 * y, 170, TFT_WHITE);
+        int x = col * GRID_CELL_SIZE;
+        tft.drawLine(x, GRID_TOP_Y, x, GRID_BOTTOM_Y + 1, TFT_WHITE);
     }
-    tft.drawLine(319, 42, 319, 170, TFT_WHITE);
 
-    for (int x = 0; x < 4; x++)
+    for (int row = 0; row <= GRID_ROWS; ++row)
     {
-        tft.drawLine(0, 42 + 32 * x, 320, 42 + 32 * x, TFT_WHITE);
+        int y = GRID_TOP_Y + GRID_CELL_SIZE * row;
+        tft.drawLine(0, y, SCREEN_WIDTH, y, TFT_WHITE);
     }
-    tft.drawLine(0, 169, 320, 169, TFT_WHITE);
 
     tft.setTextSize(2);
-    int MaxIndex = KEYS.size();
-    int KeyIndex = 0;
-    for (int m = 0; m < 4; ++m)
+    for (int row = 0; row < GRID_ROWS; ++row)
     {
-        for (int n = 0; n < 10; ++n)
+        for (int col = 0; col < GRID_COLS; ++col)
         {
-            tft.setCursor(12 + 32 * n, 51 + 32 * m);
-            String key = KEYS[KeyIndex];
-            key.toUpperCase();
-            tft.print(key);
-            KeyIndex = (KeyIndex + 1) % MaxIndex;
+            const int key_index = col + row * GRID_COLS;
+            if (key_index < static_cast<int>(KEYS.size()))
+            {
+                tft.setCursor(GRID_TEXT_OFFSET_X + GRID_CELL_SIZE * col,
+                              GRID_TOP_Y + GRID_TEXT_OFFSET_Y + GRID_CELL_SIZE * row);
+                String key = KEYS[key_index];
+                key.toUpperCase();
+                tft.print(key);
+            }
         }
     }
 
@@ -104,11 +147,11 @@ void display_keyboard()
 String keyboard_input()
 {
     display_keyboard();
-    int x = 0;
-    int y = 32;
-    tft.setCursor(5, 5);
-    tft.drawRect(x, y + 42, 32 + 1, 32 + 1, TFT_BLUE);
-    bool UpperLetter = false;
+    int selected_col = KEYBOARD_START_COL;
+    int selected_row = KEYBOARD_START_ROW;
+    tft.setCursor(INPUT_TEXT_X, INPUT_TEXT_Y);
+    draw_keyboard_selector(selected_col, selected_row, TFT_BLUE);
+    bool upper_letter = false;
     String password = "";
     unsigned long pressStartTime = 0;
     bool buttonPressed = false;
@@ -117,19 +160,19 @@ String keyboard_input()
     {
         if (digitalRead(BUTTON_UP) == LOW)
         {
-            tft.drawRect(x, y + 42, 32 + 1, 32 + 1, TFT_WHITE);
-            x = x + 32;
-            if (x >= 320)
+            draw_keyboard_selector(selected_col, selected_row, TFT_WHITE);
+            ++selected_col;
+            if (selected_col >= GRID_COLS)
             {
-                x = 0;
-                y = y + 32;
-                if (y >= 128)
+                selected_col = 0;
+                ++selected_row;
+                if (selected_row >= GRID_ROWS)
                 {
-                    y = 0;
+                    selected_row = 0;
                 }
             }
-            tft.drawRect(x, y + 42, 32 + 1, 32 + 1, TFT_BLUE);
-            delay(100);
+            draw_keyboard_selector(selected_col, selected_row, TFT_BLUE);
+            delay(KEYBOARD_NAV_DELAY_MS);
         }
 
         if (digitalRead(BUTTON_DOWN) == LOW)
@@ -149,35 +192,35 @@ String keyboard_input()
 
                 if (pressDuration < HOLD_TIME)
                 {
-                    const int KeyIndex = (x / 32) + ((y / 32) * 10);
-                    if (KeyIndex <= 37)
+                    const int key_index = selected_col + (selected_row * GRID_COLS);
+                    if (key_index < static_cast<int>(KEYS.size()))
                     {
-                        if (UpperLetter)
+                        if (upper_letter)
                         {
-                            String key = KEYS[KeyIndex];
+                            String key = KEYS[key_index];
                             key.toUpperCase();
                             tft.print(key);
                             password += key;
-                            UpperLetter = false;
+                            upper_letter = false;
                         }
                         else
                         {
-                            tft.print(KEYS[KeyIndex]);
-                            password += KEYS[KeyIndex];
+                            tft.print(KEYS[key_index]);
+                            password += KEYS[key_index];
                         }
                     }
-                    else if (KeyIndex == 39)
+                    else if (key_index == SHIFT_KEY_INDEX)
                     {
-                        UpperLetter = true;
+                        upper_letter = true;
                     }
-                    else if (KeyIndex == 38)
+                    else if (key_index == BACKSPACE_KEY_INDEX)
                     {
-                        tft.fillRect(0, 0, 320, 40, TFT_BLACK);
+                        tft.fillRect(0, 0, SCREEN_WIDTH, INPUT_CLEAR_HEIGHT, TFT_BLACK);
                         if (!password.isEmpty())
                         {
                             password = password.substring(0, password.length() - 1);
                         }
-                        tft.setCursor(5, 5);
+                        tft.setCursor(INPUT_TEXT_X, INPUT_TEXT_Y);
                         tft.print(password);
                     }
                 }
@@ -186,7 +229,7 @@ String keyboard_input()
                     return password;
                 }
             }
-            delay(100);
+            delay(KEYBOARD_NAV_DELAY_MS);
         }
     }
 }
