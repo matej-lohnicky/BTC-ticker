@@ -2,13 +2,21 @@
 #include <WiFi.h>
 #include <time.h>
 #include <vector>
+#include <cstring>
 
 #include <modules/wifi_connect.h>
 #include <modules/sprites.h>
 #include <modules/utils.h>
 #include <modules/constants.h>
 #include <modules/variables.h>
-#include <credentials/wifi_credentials.h>
+
+#ifndef WIFI_SSID
+#define WIFI_SSID ""
+#endif
+
+#ifndef WIFI_PASSWORD
+#define WIFI_PASSWORD ""
+#endif
 
 
 std::vector<String> get_available_wifis()
@@ -76,6 +84,13 @@ void user_input_wifi()
 void fast_connect_wifi() {
     tft.fillScreen(TFT_BLACK);
     tft.setCursor(20, 20);
+
+    if (std::strlen(WIFI_SSID) == 0 || std::strlen(WIFI_PASSWORD) == 0) {
+        tft.print("No .env WiFi credentials found");
+        delay(1500);
+        user_input_wifi();
+        return;
+    }
 
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     tft.print("Connecting to WiFi");

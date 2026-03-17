@@ -1,5 +1,7 @@
 {
     "files.associations": {
         "algorithm": "cpp"
-    }
+    },
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true
 }

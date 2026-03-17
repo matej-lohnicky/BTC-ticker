@@ -1,6 +1,8 @@
 /include/credentials/*
 !/include/credentials/README.md
-!/include/credentials/*.example.h
+/.env
+/.env.*
+!/.env.example
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,platformio,c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,platformio,c++
@@ -49,10 +51,7 @@
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
 !.vscode/extensions.json
-!.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/
