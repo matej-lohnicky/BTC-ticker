@@ -2,6 +2,23 @@
     "files.associations": {
         "algorithm": "cpp"
     },
+
+    "editor.formatOnSave": true,
     "editor.defaultFormatter": "ms-vscode.cpptools",
-    "editor.formatOnSave": true
+
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools",
+        "editor.formatOnSave": true
+    },
+
+    "editor.rulers": [100]
 }

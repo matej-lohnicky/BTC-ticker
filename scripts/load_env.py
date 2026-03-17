@@ -1,9 +1,13 @@
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-env: Any
-Import("env")  # type: ignore[name-defined]
+if "Import" not in globals():
+    raise RuntimeError("This script must be run by PlatformIO/SCons")
+
+Import = cast(Any, globals()["Import"])
+Import("env")
+env = cast(Any, globals()["env"])
 
 
 def _load_dotenv(dotenv_path: Path) -> dict:
@@ -40,7 +44,9 @@ ssid = os.environ.get("WIFI_SSID", "")
 password = os.environ.get("WIFI_PASSWORD", "")
 
 if ssid and password:
-    env.Append(CPPDEFINES=[
-        ("WIFI_SSID", _to_cpp_define_string(ssid)),
-        ("WIFI_PASSWORD", _to_cpp_define_string(password)),
-    ])
+    env.Append(
+        CPPDEFINES=[
+            ("WIFI_SSID", _to_cpp_define_string(ssid)),
+            ("WIFI_PASSWORD", _to_cpp_define_string(password)),
+        ]
+    )

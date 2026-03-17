@@ -1,3 +1,5 @@
+#pragma once
+
 extern bool chartFasterMode;
 extern bool offline_mode;
 extern int mode0_update_interval;

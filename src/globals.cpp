@@ -1,10 +1,10 @@
-#pragma once
 #include <TFT_eSPI.h>
+#include <modules/constants.h>
 
 // variables
 bool chartFasterMode = false;
 bool offline_mode = false;
-int mode0_update_interval;
+int mode0_update_interval = MODE0_UPDATE_INTERVAL_NORMAL;
 unsigned long currentMillis = 0;
 unsigned long lastModeUpdate = 0;
 unsigned long lastPriceUpdate = 0;
