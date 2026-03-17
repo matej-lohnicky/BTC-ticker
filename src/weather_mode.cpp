@@ -11,6 +11,7 @@
 #include <modules/app_state.h>
 #include <modules/sprites.h>
 #include <modules/variables.h>
+#include <modules/weather_location.h>
 #include <modules/weather_mode.h>
 
 #include <algorithm>
@@ -82,16 +83,23 @@ constexpr int RAIN_BAR_MAX_HEIGHT = 59;
 constexpr int RAIN_SPRITE_X = 0;
 constexpr int RAIN_SPRITE_Y = 85;
 
-constexpr const char API_WEATHER[] =
-    "https://api.open-meteo.com/v1/"
-    "forecast?latitude=50.2092&longitude=15.8328&current=temperature_2m,"
-    "weather_code&hourly=precipitation_probability&daily=sunrise,sunset&"
-    "timezone=auto&forecast_days=1";
+constexpr const char WEATHER_FORECAST_API[] = "https://api.open-meteo.com/v1/forecast";
+constexpr int WEATHER_URL_BUFFER_SIZE = 320;
+String build_weather_api_url()
+{
+    char weatherUrl[WEATHER_URL_BUFFER_SIZE];
+    std::snprintf(weatherUrl, sizeof(weatherUrl),
+                  "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,weather_code&hourly="
+                  "precipitation_probability&daily=sunrise,sunset&timezone=auto&forecast_days=1",
+                  WEATHER_FORECAST_API, WEATHER_LATITUDE, WEATHER_LONGITUDE);
+    return String(weatherUrl);
+}
 
 void update_weather()
 {
+    String weatherUrl = build_weather_api_url();
     HTTPClient http;
-    http.begin(API_WEATHER);
+    http.begin(weatherUrl);
     int httpCode = http.GET();
 
     if (httpCode == WEATHER_HTTP_OK)

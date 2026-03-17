@@ -1,0 +1,55 @@
+import json
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+
+def resolve_weather_coordinates(city: str, country: str) -> tuple[float, float]:
+    query = city.strip()
+    if not query:
+        raise RuntimeError("WEATHER_CITY must be set in .env")
+
+    params = {
+        "name": query,
+        "count": "1",
+        "language": "en",
+        "format": "json",
+    }
+
+    country_code = country.strip()
+    if country_code:
+        params["country_code"] = country_code
+
+    url = "https://geocoding-api.open-meteo.com/v1/search?" + urllib.parse.urlencode(
+        params
+    )
+
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError(f"Failed to geocode WEATHER_CITY '{query}': {exc}") from exc
+
+    results = payload.get("results") or []
+    if not results:
+        raise RuntimeError(f"No geocoding results for WEATHER_CITY '{query}'")
+
+    latitude = results[0].get("latitude")
+    longitude = results[0].get("longitude")
+    if latitude is None or longitude is None:
+        raise RuntimeError("Geocoding response did not contain latitude/longitude")
+
+    return float(latitude), float(longitude)
+
+
+def write_weather_location_header(
+    project_dir: Path, latitude: float, longitude: float
+) -> None:
+    header_path = project_dir / "include" / "modules" / "weather_location.h"
+    header_path.write_text(
+        "#pragma once\n"
+        "\n"
+        "constexpr double WEATHER_LATITUDE = {:.6f};\n"
+        "constexpr double WEATHER_LONGITUDE = {:.6f};\n".format(latitude, longitude),
+        encoding="utf-8",
+    )

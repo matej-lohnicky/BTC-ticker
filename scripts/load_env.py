@@ -1,3 +1,4 @@
+import importlib.util
 from pathlib import Path
 from typing import Any, cast
 
@@ -33,15 +34,39 @@ def _to_cpp_define_string(value: str) -> str:
     return '\\"{}\\"'.format(escaped)
 
 
+def _load_weather_coordinates_module(project_dir: Path) -> Any:
+    module_path = project_dir / "scripts" / "weather_coordinates.py"
+    spec = importlib.util.spec_from_file_location("weather_coordinates", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("Unable to load scripts/weather_coordinates.py")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 project_dir = Path(env.subst("$PROJECT_DIR"))
 dotenv_values = _load_dotenv(project_dir / ".env")
+weather_coordinates = _load_weather_coordinates_module(project_dir)
 
 ssid = dotenv_values.get("WIFI_SSID", "")
 password = dotenv_values.get("WIFI_PASSWORD", "")
 timezone = dotenv_values.get("APP_TIMEZONE", "")
+weather_city = dotenv_values.get("WEATHER_CITY", "")
+weather_country = dotenv_values.get("WEATHER_COUNTRY", "")
 
 if not timezone:
     raise RuntimeError("APP_TIMEZONE must be set in .env")
+
+weather_latitude, weather_longitude = weather_coordinates.resolve_weather_coordinates(
+    weather_city,
+    weather_country,
+)
+weather_coordinates.write_weather_location_header(
+    project_dir,
+    weather_latitude,
+    weather_longitude,
+)
 
 cpp_defines = []
 

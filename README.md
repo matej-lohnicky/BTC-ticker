@@ -52,14 +52,18 @@ Wi-Fi credentials are provided through a local .env file in the repository root.
 WIFI_SSID=your_wifi_name
 WIFI_PASSWORD=your_wifi_password
 APP_TIMEZONE=CET-1CEST,M3.5.0/2,M10.5.0/3
+WEATHER_CITY=Prague
+WEATHER_COUNTRY=CZ
 ```
 
 Build integration:
 
 - [platformio.ini](platformio.ini) runs [scripts/load_env.py](scripts/load_env.py) as a pre-build step
 - [scripts/load_env.py](scripts/load_env.py) reads .env values
-- The values are injected as compile-time defines
+- [scripts/load_env.py](scripts/load_env.py) resolves WEATHER_CITY to coordinates and generates [include/modules/weather_location.h](include/modules/weather_location.h)
+- Runtime values are injected as compile-time defines
 - [src/wifi_connect.cpp](src/wifi_connect.cpp) uses those defines in Home mode
+- [src/weather_mode.cpp](src/weather_mode.cpp) uses generated coordinates for weather fetch
 
 If credentials are not present, firmware falls back to manual Wi-Fi selection/input flow.
 
@@ -81,7 +85,8 @@ Primary build target is defined in [platformio.ini](platformio.ini):
 
 - Build fails due to credentials:
   - Confirm .env exists in the project root
-  - Confirm WIFI_SSID, WIFI_PASSWORD, and APP_TIMEZONE are non-empty
+  - Confirm WIFI_SSID, WIFI_PASSWORD, APP_TIMEZONE, and WEATHER_CITY are non-empty
+  - Confirm the build machine has internet access to resolve WEATHER_CITY during pre-build
 - Device fails to connect in Home mode:
   - Verify SSID/password values
   - Use Standard mode to test manual connection
