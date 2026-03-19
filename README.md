@@ -10,6 +10,35 @@ BTCticker is an ESP32 firmware project for the LILYGO T-Display S3. The device p
 - Weather mode
 - Button-based mode switching
 
+## Screenshots
+
+### Quick Tour
+
+The flow below is grouped by setup screens first, then display modes.
+
+#### Setup Flow
+
+| WiFi Choose | Keyboard |
+| --- | --- |
+| [![WiFi Choose](screenshots/wifi_choose.png)](screenshots/wifi_choose.png) | [![Keyboard](screenshots/keyboard.png)](screenshots/keyboard.png) |
+| Network selection mock | Password input mock |
+
+#### Modes
+
+| Bitcoin Ticker | Weather | Clock |
+| --- | --- | --- |
+| [![Bitcoin](screenshots/bitcoin.png)](screenshots/bitcoin.png) | [![Weather](screenshots/weather.png)](screenshots/weather.png) | [![Clock](screenshots/clock.png)](screenshots/clock.png) |
+| Price, change, and chart panel | Conditions and rain profile | Digital clock card |
+
+#### Detail Panels
+
+| Weather Icons | Sessions |
+| --- | --- |
+| [![Weather Icons](screenshots/weather_icons.png)](screenshots/weather_icons.png) | [![Sessions](screenshots/sessions.png)](screenshots/sessions.png) |
+| Weather icon set | Market sessions panel |
+
+Tip: Click any image to open the full-size version.
+
 ## Tech Stack
 
 - PlatformIO
