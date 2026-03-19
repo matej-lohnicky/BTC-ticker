@@ -1,17 +1,8 @@
 #pragma once
 
-class String;
+#include <Arduino.h>
 
-using byte = unsigned char;
-
-namespace std
-{
-template <typename T>
-class allocator;
-
-template <typename T, typename Allocator>
-class vector;
-}  // namespace std
+#include <vector>
 
 enum class DisplayMode : int
 {
@@ -37,7 +28,7 @@ extern int chartTime;
 extern double percentChange;
 extern int chartTimeChange;
 extern bool priceFreshSample;
-extern std::vector<int, std::allocator<int>> readings;
+extern std::vector<int> readings;
 
 extern int globalMinutes;
 extern int globalHours;
@@ -49,4 +40,4 @@ extern int sunriseMinutes;
 extern int sunsetHours;
 extern int sunsetMinutes;
 extern float currentTemperature;
-extern std::vector<int, std::allocator<int>> precipitationProbability;
+extern std::vector<int> precipitationProbability;

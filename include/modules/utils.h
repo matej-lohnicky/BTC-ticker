@@ -1,15 +1,8 @@
 #pragma once
 
-class String;
+#include <Arduino.h>
 
-namespace std
-{
-template <typename T>
-class allocator;
+#include <vector>
 
-template <typename T, typename Allocator>
-class vector;
-}  // namespace std
-
-unsigned row_choice(const std::vector<String, std::allocator<String>>&);
+unsigned row_choice(const std::vector<String>&);
 String keyboard_input();
