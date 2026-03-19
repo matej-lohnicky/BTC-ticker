@@ -1,7 +1,4 @@
-#include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include <TFT_eSPI.h>
-#include <WiFi.h>
 #include <images/GreenArrow32.h>
 #include <images/Japan24.h>
 #include <images/RedArrow32.h>
@@ -22,7 +19,6 @@ namespace
 {
 
 constexpr int CHART_STEP = 15;
-constexpr int MAX_CHART_POINTS = 10;
 constexpr int CHART_GRID_HORIZONTAL_LINES = 6;
 constexpr int CHART_GRID_VERTICAL_LINES = 10;
 constexpr int CHART_GRID_Y_SPACING = 15;
@@ -84,44 +80,6 @@ constexpr int US_OPEN_MINUTE = 930;
 constexpr int US_CLOSE_MINUTE = 1319;
 constexpr int JP_OPEN_MINUTE = 60;
 constexpr int JP_CLOSE_MINUTE = 479;
-constexpr int HTTP_TIMEOUT_MS = 8000;
-constexpr unsigned long WIFI_RECOVERY_INTERVAL_MS = 30000UL;
-constexpr int MAX_FAILED_FETCHES_BEFORE_RECOVERY = 3;
-constexpr const char API_BTC_PRICE[] = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
-
-int consecutivePriceFetchFailures = 0;
-unsigned long lastWiFiRecoveryAttempt = 0;
-
-void mark_price_update_failed()
-{
-    priceFreshSample = false;
-    consecutivePriceFetchFailures++;
-
-    if (consecutivePriceFetchFailures < MAX_FAILED_FETCHES_BEFORE_RECOVERY)
-    {
-        return;
-    }
-
-    if (currentMillis - lastWiFiRecoveryAttempt < WIFI_RECOVERY_INTERVAL_MS)
-    {
-        return;
-    }
-
-    // Throttle reconnect attempts to avoid blocking loops on unstable links.
-    lastWiFiRecoveryAttempt = currentMillis;
-    Serial.println("Price fetch repeatedly failing, attempting WiFi recovery");
-
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        WiFi.reconnect();
-    }
-}
-
-void mark_price_update_succeeded()
-{
-    priceFreshSample = true;
-    consecutivePriceFetchFailures = 0;
-}
 
 void chart_background()
 {
@@ -265,83 +223,7 @@ void sessions_panel()
     sessions.pushSprite(SESSIONS_SPRITE_X, SESSIONS_SPRITE_Y);
 }
 
-void update_price_chart()
-{
-    if (readings.size() >= MAX_CHART_POINTS)
-    {
-        readings.erase(readings.begin());
-    }
-
-    readings.push_back(price);
-}
-
 }  // namespace
-
-void bitcoin_update_price()
-{
-    lastPriceUpdate = currentMillis;
-
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.println("WiFi disconnected, skipping BTC fetch");
-        mark_price_update_failed();
-        return;
-    }
-
-    btc_price.setFreeFont(&FreeMonoBold24pt7b);
-
-    HTTPClient http;
-    http.setConnectTimeout(HTTP_TIMEOUT_MS);
-    http.setTimeout(HTTP_TIMEOUT_MS);
-    http.begin(API_BTC_PRICE);
-    int httpCode = http.GET();
-
-    if (httpCode == HTTP_CODE_OK)
-    {
-        String payload = http.getString();
-        DynamicJsonDocument doc(1024);
-
-        DeserializationError error = deserializeJson(doc, payload);
-        if (error)
-        {
-            Serial.print("Failed to parse JSON. Error: ");
-            Serial.println(error.c_str());
-            mark_price_update_failed();
-        }
-        else
-        {
-            double lastPriceDouble = doc["lastPrice"].as<double>();
-            price = static_cast<int>(lastPriceDouble);
-            percentChange = doc["priceChangePercent"].as<double>();
-            mark_price_update_succeeded();
-        }
-    }
-    else
-    {
-        Serial.print("HTTP GET failed. Code: ");
-        Serial.println(httpCode);
-        mark_price_update_failed();
-    }
-
-    http.end();
-}
-
-void bitcoin_sync_chart()
-{
-    if (chartTimeChange == chartTime)
-    {
-        return;
-    }
-
-    chartTimeChange = chartTime;
-
-    // Append to chart only when we actually received a fresh sample.
-    if (priceFreshSample)
-    {
-        update_price_chart();
-        priceFreshSample = false;
-    }
-}
 
 void bitcoin_render()
 {

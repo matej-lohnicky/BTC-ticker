@@ -1,87 +1,93 @@
-# BTCticker
+# BTCticker (Screenshot Branch)
 
-BTCticker is an ESP32 firmware project for the LILYGO T-Display S3. The device presents Bitcoin market data and utility dashboards on the built-in display.
+This branch is intentionally repurposed as a screenshot generator for the LILYGO T-Display S3. On boot, the firmware renders five deterministic screens and streams them over USB serial as RGB565 frames.
 
 ## Features
 
-- Live BTC price and 24h change display
-- Animated Bitcoin mode with chart and session panel
-- Digital clock mode
-- Weather mode
-- Button-based mode switching
+- Automatic boot sequence that renders and captures:
+  - WiFi choose mock screen
+  - Keyboard mock screen
+  - Bitcoin ticker with full graph
+  - Weather screen with fixed pleasant values
+  - Clock screen fixed at 09:33
+- USB serial screenshot stream protocol (`SHOT` header + RGB565 payload)
+- Host-side conversion script to generate PNG files
 
 ## Tech Stack
 
 - PlatformIO
 - Arduino framework (ESP32)
 - TFT_eSPI
-- ArduinoJson
-- HTTPClient
 
 ## Repository Layout
 
 - [src/core](src/core): app loop/controller and shared runtime globals
 - [src/modes](src/modes): mode implementations (bitcoin, clock, weather)
-- [src/hal](src/hal): hardware-facing modules (display, wifi, brightness, ui utils)
+- [src/hal](src/hal): hardware-facing modules (display, screenshot transport, brightness)
 - [include/modules/modes](include/modules/modes): canonical mode headers
 - [include/modules/hal](include/modules/hal): canonical HAL headers
-- [include/modules/generated](include/modules/generated): auto-generated headers
 - [include/modules](include/modules): shared non-domain headers
 - [include/images](include/images): embedded graphics assets
-- [scripts/load_env.py](scripts/load_env.py): pre-build .env loader
+- [scripts/capture_screenshots.py](scripts/capture_screenshots.py): host-side frame capture and PNG conversion
 - [platformio.ini](platformio.ini): PlatformIO build configuration
 
 ## Requirements
 
 - VS Code with PlatformIO extension
 - ESP32 board supported by the configured environment
+- Python 3 with `pyserial` and `Pillow` for host capture
 
 ## Getting Started
 
-1. Clone the repository.
-2. Create a local .env file from the template.
-3. Build and upload the firmware.
+1. Build and flash the firmware.
+2. Run the capture script while the device is connected via USB.
 
 ```powershell
-copy .env.example .env
 pio run
 pio run -t upload
-pio device monitor -b 115200
+python -m pip install pyserial pillow
+python scripts/capture_screenshots.py --port COM4 --baud 115200 --output screenshots
 ```
 
-## Configuration via .env
+No `.env`, API keys, weather lookup scripts, or pre-build configuration scripts are required.
 
-Wi-Fi credentials are provided through a local .env file in the repository root.
+Known-good example (from this workspace):
 
-```env
-WIFI_SSID=your_wifi_name
-WIFI_PASSWORD=your_wifi_password
-APP_TIMEZONE=CET-1CEST,M3.5.0/2,M10.5.0/3
-WEATHER_CITY=Prague
-WEATHER_COUNTRY=CZ
+```powershell
+python scripts/capture_screenshots.py --port COM3 --baud 115200 --output screenshots --settle 2 --timeout 20
 ```
 
-Build integration:
+If `pio` is not available in your shell, run the same actions through VS Code PlatformIO Build/Upload tasks.
 
-- [platformio.ini](platformio.ini) runs [scripts/load_env.py](scripts/load_env.py) as a pre-build step
-- [scripts/load_env.py](scripts/load_env.py) reads .env values
-- [scripts/load_env.py](scripts/load_env.py) resolves WEATHER_CITY to coordinates and generates [include/modules/generated/weather_location.h](include/modules/generated/weather_location.h)
-- Runtime values are injected as compile-time defines
-- [src/hal/wifi_connect.cpp](src/hal/wifi_connect.cpp) uses those defines in Home mode
-- [src/modes/weather_mode.cpp](src/modes/weather_mode.cpp) uses generated coordinates for weather fetch
+Useful capture flags:
 
-Canonical include policy:
+- `--settle 2` to wait longer after reset before listening
+- `--timeout 20` to allow slower startup/capture
+- `--no-swap-bytes` if colors look wrong in output PNGs
 
-- Domain headers live in subfolders only (`modules/modes`, `modules/hal`, `modules/generated`)
-- Root-level duplicate wrappers should not be reintroduced
+Expected PNG files:
 
-If credentials are not present, firmware falls back to manual Wi-Fi selection/input flow.
+- `wifi_choose.png`
+- `keyboard.png`
+- `bitcoin.png`
+- `weather.png`
+- `clock.png`
 
-## Security
+The script also writes `.rgb565` frame dumps alongside PNGs for debugging.
 
-- .env is ignored by .gitignore
-- .env.example is tracked for onboarding
-- Credentials are not stored in source headers
+## Screenshot Protocol
+
+Each frame is sent as:
+
+- `magic[4] = "SHOT"`
+- `version: uint8`
+- `screen_id: uint8`
+- `width: uint16` (little-endian)
+- `height: uint16` (little-endian)
+- `payload_bytes: uint32` (little-endian)
+- `payload: RGB565, row-major`
+
+The stream ends with `screen_id = 255` and an empty payload.
 
 ## Build Environment
 
@@ -89,21 +95,24 @@ Primary build target is defined in [platformio.ini](platformio.ini):
 
 - Environment: lilygo-t-display-s3
 - Framework: arduino
-- Dependencies: TFT_eSPI, WiFi, ArduinoJson, HTTPClient
+- Dependencies: TFT_eSPI
+- Extra scripts: none
 
 ## Troubleshooting
 
-- Build fails due to credentials:
-  - Confirm .env exists in the project root
-  - Confirm WIFI_SSID, WIFI_PASSWORD, APP_TIMEZONE, and WEATHER_CITY are non-empty
-  - Confirm the build machine has internet access to resolve WEATHER_CITY during pre-build
-- Device fails to connect in Home mode:
-  - Verify SSID/password values
-  - Use Standard mode to test manual connection
+- No frames captured:
+  - Close any serial monitor using the same COM port
+  - Reset the device and restart `scripts/capture_screenshots.py`
+  - Use `--settle 2 --timeout 20` for slower board reset/re-enumeration
+  - Re-upload firmware, then run capture again from a fresh boot
+- Python import errors:
+  - Install dependencies: `python -m pip install pyserial pillow`
+- Corrupted output images:
+  - Verify baud rate is `115200`
+  - Retry capture after a hard reset so the script receives the stream from boot
+  - Try `--no-swap-bytes` if color channels appear incorrect
 
-## Contributing
 
-Issues and pull requests are welcome.
 
 ## License
 

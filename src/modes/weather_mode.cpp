@@ -1,5 +1,3 @@
-#include <ArduinoJson.h>
-#include <HTTPClient.h>
 #include <TFT_eSPI.h>
 #include <images/clear_sky72.h>
 #include <images/cloudy72.h>
@@ -9,26 +7,15 @@
 #include <images/snowflake72.h>
 #include <images/thunderstorm72.h>
 #include <modules/app_state.h>
-#include <modules/generated/weather_location.h>
 #include <modules/modes/weather_mode.h>
 #include <modules/sprites.h>
-#include <modules/variables.h>
 
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
 #include <vector>
 
 namespace
 {
-
-constexpr int WEATHER_HTTP_OK = 200;
-constexpr int WEATHER_HTTP_TIMEOUT_MS = 8000;
-constexpr int WEATHER_JSON_CAPACITY = 4096;
-constexpr int TIME_SUBSTR_HOUR_START = 11;
-constexpr int TIME_SUBSTR_HOUR_END = 13;
-constexpr int TIME_SUBSTR_MINUTE_START = 14;
-constexpr int TIME_SUBSTR_MINUTE_END = 16;
 
 constexpr int ICON_X = 14;
 constexpr int ICON_Y = 7;
@@ -84,70 +71,6 @@ constexpr int RAIN_BAR_WIDTH = 10;
 constexpr int RAIN_BAR_MAX_HEIGHT = 59;
 constexpr int RAIN_SPRITE_X = 0;
 constexpr int RAIN_SPRITE_Y = 85;
-
-constexpr const char WEATHER_FORECAST_API[] = "https://api.open-meteo.com/v1/forecast";
-constexpr int WEATHER_URL_BUFFER_SIZE = 320;
-String build_weather_api_url()
-{
-    char weatherUrl[WEATHER_URL_BUFFER_SIZE];
-    std::snprintf(weatherUrl, sizeof(weatherUrl),
-                  "%s?latitude=%.4f&longitude=%.4f&current=temperature_2m,weather_code&hourly="
-                  "precipitation_probability&daily=sunrise,sunset&timezone=auto&forecast_days=1",
-                  WEATHER_FORECAST_API, WEATHER_LATITUDE, WEATHER_LONGITUDE);
-    return String(weatherUrl);
-}
-
-void update_weather()
-{
-    String weatherUrl = build_weather_api_url();
-    HTTPClient http;
-    http.setConnectTimeout(WEATHER_HTTP_TIMEOUT_MS);
-    http.setTimeout(WEATHER_HTTP_TIMEOUT_MS);
-    http.begin(weatherUrl);
-    int httpCode = http.GET();
-
-    if (httpCode == WEATHER_HTTP_OK)
-    {
-        String payload = http.getString();
-        DynamicJsonDocument doc(WEATHER_JSON_CAPACITY);
-
-        DeserializationError error = deserializeJson(doc, payload);
-        if (error)
-        {
-            Serial.print("Failed to parse JSON. Error: ");
-            Serial.println(error.c_str());
-            http.end();
-            return;
-        }
-
-        JsonObject current = doc["current"];
-        JsonObject daily = doc["daily"];
-        JsonObject hourly = doc["hourly"];
-        JsonArray precipitationArray = hourly["precipitation_probability"];
-
-        weatherCode = current["weather_code"].as<int>();
-        currentTemperature = static_cast<float>(current["temperature_2m"].as<double>());
-
-        String sunrise = daily["sunrise"][0].as<String>();
-        String sunset = daily["sunset"][0].as<String>();
-
-        // Open-Meteo returns ISO datetime strings; we only need HH:MM.
-        sunriseHours = sunrise.substring(TIME_SUBSTR_HOUR_START, TIME_SUBSTR_HOUR_END).toInt();
-        sunriseMinutes =
-            sunrise.substring(TIME_SUBSTR_MINUTE_START, TIME_SUBSTR_MINUTE_END).toInt();
-        sunsetHours = sunset.substring(TIME_SUBSTR_HOUR_START, TIME_SUBSTR_HOUR_END).toInt();
-        sunsetMinutes = sunset.substring(TIME_SUBSTR_MINUTE_START, TIME_SUBSTR_MINUTE_END).toInt();
-
-        precipitationProbability.clear();
-        const size_t maxSamples = std::min(precipitationArray.size(), static_cast<size_t>(24));
-        for (size_t i = 0; i < maxSamples; i++)
-        {
-            precipitationProbability.push_back(precipitationArray[i].as<int>());
-        }
-    }
-
-    http.end();
-}
 
 void display_weather_icon()
 {
@@ -304,8 +227,6 @@ void display_rain_chart()
 
 void weather_render()
 {
-    update_weather();
-
     display_weather_icon();
     display_temperature();
     display_sun_time();

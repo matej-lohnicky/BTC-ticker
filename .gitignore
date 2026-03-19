@@ -3,6 +3,7 @@
 /.env
 /.env.*
 !/.env.example
+/screenshots/*.rgb565
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++,python,visualstudiocode,c,platformio
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++,python,visualstudiocode,c,platformio

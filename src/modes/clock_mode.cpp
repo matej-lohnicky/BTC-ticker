@@ -3,8 +3,6 @@
 #include <modules/app_state.h>
 #include <modules/modes/clock_mode.h>
 #include <modules/sprites.h>
-#include <modules/variables.h>
-#include <time.h>
 
 namespace
 {
@@ -30,24 +28,6 @@ String left_digit(int value) { return String((value / 10) % 10); }
 String right_digit(int value) { return String(value % 10); }
 
 }  // namespace
-
-void clock_update_time()
-{
-    lastTimeUpdate = currentMillis;
-
-    struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
-    {
-        Serial.println("Time sync unavailable, keeping previous values");
-        return;
-    }
-
-    globalMinutes = timeinfo.tm_min;
-    globalHours = timeinfo.tm_hour;
-    globalDay = timeinfo.tm_wday;
-
-    chartTime = globalHours;
-}
 
 void clock_render()
 {
