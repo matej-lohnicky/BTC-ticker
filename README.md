@@ -65,6 +65,14 @@ Tip: Click any image to open the full-size version.
 - VS Code with PlatformIO extension
 - ESP32 board supported by the configured environment
 
+## 3D Printed Cover
+
+I designed this cover to make the project feel like a final device. Without it, this project is firmware only.
+
+If you want to see the actual usage of this firmware, look here.
+
+- [Cover for T-Display S3 on Printables](https://www.printables.com/model/1640957-cover-for-t-display-s3)
+
 ## Getting Started
 
 1. Clone the repository.
